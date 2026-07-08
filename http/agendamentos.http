@@ -1,0 +1,181 @@
+### Configuração
+# Compatível com a extensão "REST Client" (VS Code) e o HTTP Client nativo do IntelliJ/JetBrains.
+# Requisitos que dependem de um agendamento criado (buscar/atualizar) reutilizam o id da resposta
+
+@baseUrl = http://localhost:8080
+
+### Criar agendamento
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Maria Silva",
+  "pacienteCpf": "12345678911",
+  "dataAgendamento": "2030-01-01T10:30:00",
+  "observacao": "Consulta inicial"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("agendamentoId", response.body.data.id);
+    }
+%}
+
+### Listar agendamentos (paginado)
+GET {{baseUrl}}/api/v1/agendamentos?pagina=0&tamanho=20
+
+
+### Listar agendamentos filtrando por status
+GET {{baseUrl}}/api/v1/agendamentos?status=PENDENTE&pagina=0&tamanho=20
+
+
+### Buscar agendamento por ID
+GET {{baseUrl}}/api/v1/agendamentos/{{agendamentoId}}
+
+
+### Atualizar status para CONFIRMADO
+PATCH {{baseUrl}}/api/v1/agendamentos/{{agendamentoId}}/status
+Content-Type: application/json
+
+{
+  "status": "CONFIRMADO"
+}
+
+
+### Cancelar agendamento (com observação obrigatória)
+PATCH {{baseUrl}}/api/v1/agendamentos/{{agendamentoId}}/status
+Content-Type: application/json
+
+{
+  "status": "CANCELADO",
+  "observacao": "Paciente desmarcou"
+}
+
+
+### --- Regras de negócio: casos que devem falhar ---
+
+### Buscar agendamento inexistente -> 404
+GET {{baseUrl}}/api/v1/agendamentos/00000000-0000-0000-0000-000000000000
+
+
+### Criar com CPF inválido -> 400
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Nome Válido",
+  "pacienteCpf": "123",
+  "dataAgendamento": "2030-01-01T10:00:00"
+}
+
+
+### Criar com nome curto -> 400
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Jo",
+  "pacienteCpf": "12345678901",
+  "dataAgendamento": "2030-01-01T10:00:00"
+}
+
+
+### Criar com data no passado -> 400
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Nome Válido",
+  "pacienteCpf": "12345678901",
+  "dataAgendamento": "2020-01-01T10:00:00"
+}
+
+
+### Criar agendamento duplicado (mesmo paciente + mesmo horário) -> 409
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Paciente Duplicado",
+  "pacienteCpf": "99988877766",
+  "dataAgendamento": "2032-03-03T09:00:00"
+}
+
+###
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Paciente Duplicado",
+  "pacienteCpf": "99988877766",
+  "dataAgendamento": "2032-03-03T09:00:00"
+}
+
+
+### Cancelar sem observação -> 400
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Paciente Sem Observacao",
+  "pacienteCpf": "55544433322",
+  "dataAgendamento": "2032-04-04T09:00:00"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("agendamentoParaCancelarId", response.body.data.id);
+    }
+%}
+
+###
+PATCH {{baseUrl}}/api/v1/agendamentos/{{agendamentoParaCancelarId}}/status
+Content-Type: application/json
+
+{
+  "status": "CANCELADO"
+}
+
+
+### Alterar status de agendamento já cancelado -> 409
+POST {{baseUrl}}/api/v1/agendamentos
+Content-Type: application/json
+
+{
+  "pacienteNome": "Paciente Recancelamento",
+  "pacienteCpf": "11199988877",
+  "dataAgendamento": "2032-05-05T09:00:00"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("agendamentoParaCancelarDeNovoId", response.body.data.id);
+    }
+%}
+
+###
+PATCH {{baseUrl}}/api/v1/agendamentos/{{agendamentoParaCancelarDeNovoId}}/status
+Content-Type: application/json
+
+{
+  "status": "CANCELADO",
+  "observacao": "Cancelado para o teste"
+}
+
+###
+PATCH {{baseUrl}}/api/v1/agendamentos/{{agendamentoParaCancelarDeNovoId}}/status
+Content-Type: application/json
+
+{
+  "status": "CONFIRMADO"
+}
+
+
+### --- Observabilidade ---
+
+### Health check
+GET {{baseUrl}}/actuator/health
+
+
+### Info da aplicação
+GET {{baseUrl}}/actuator/info

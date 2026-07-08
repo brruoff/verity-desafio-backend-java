@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+*.class
+.sdkman/
+.m2/
+.vscode/
+*.log
