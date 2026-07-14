@@ -1,5 +1,9 @@
 package com.desafio.agendamento.frameworks.exceptions;
 
+import com.desafio.agendamento.adapters.in.controller.ApiResponse;
+import com.desafio.agendamento.usecases.exceptions.AgendamentoNaoEncontradoException;
+import com.desafio.agendamento.usecases.exceptions.OperacaoNaoPermitidaException;
+import com.desafio.agendamento.usecases.exceptions.RegraDeNegocioException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -7,7 +11,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,7 +22,7 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return ResponseEntity.badRequest().body(ApiResponse.success(errors, "Dados inválidos"));
+        return ResponseEntity.badRequest().body(ApiResponse.error(errors, "Dados inválidos"));
     }
 
     @ExceptionHandler(AgendamentoNaoEncontradoException.class)

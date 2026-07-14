@@ -1,5 +1,7 @@
 # Desafio Backend Java
 
+> Retorno do processo seletivo e correções aplicadas em [CODE_REVIEW.md](CODE_REVIEW.md).
+
 ## Visão geral
 Microserviço para gestão de agendamentos domiciliares, seguindo uma estrutura hexagonal com separação entre domínio, casos de uso, portas, adaptadores e infraestrutura.
 
@@ -31,7 +33,8 @@ Pré-requisito: Java 25 instalado.
 ```
 
 - 12 testes unitários (JUnit 5 + Mockito):
-  - `AgendamentoUseCaseImplTest` (8): criação válida, publicação do evento Kafka na criação, CPF inválido, cancelamento sem observação, nome curto, data no passado, atualização de status de agendamento inexistente (404) e alteração de status de agendamento já cancelado (409).
+  - `CriarAgendamentoUseCaseImplTest` (5): criação válida, publicação do evento Kafka na criação, CPF inválido, nome curto e data no passado.
+  - `AtualizarStatusAgendamentoUseCaseImplTest` (3): cancelamento sem observação, atualização de status de agendamento inexistente (404) e alteração de status de agendamento já cancelado (409).
   - `KafkaAgendamentoEventPublisherTest` (2): falha assíncrona e falha síncrona do `KafkaTemplate.send` nunca derrubam a criação do agendamento.
   - `GlobalExceptionHandlerTest` (1): exceção inesperada mapeada para 500.
   - `HomeControllerTest` (1): endpoint raiz.
@@ -76,7 +79,8 @@ curl -X PATCH http://localhost:8080/api/v1/agendamentos/{id}/status \
 ## Decisões arquiteturais
 - Estrutura hexagonal seguindo exatamente o pacote exigido: `entities`, `usecases/ports/{in,out}`, `usecases/impl`, `adapters/{in/controller, out/persistence, out/messaging}`, `frameworks/{spring, config, exceptions}`.
 - Regras de negócio centralizadas em casos de uso para manter a entidade de domínio independente de frameworks (a classe `Agendamento` não importa nada de Spring/JPA).
-- Exceções de domínio próprias em `frameworks/exceptions` (`AgendamentoNaoEncontradoException`, `RegraDeNegocioException`, `OperacaoNaoPermitidaException`), mapeadas pelo `GlobalExceptionHandler` para 404, 400 e 409 respectivamente. Um handler genérico de `Exception` cobre falhas inesperadas com 500, mantendo o envelope de resposta consistente em qualquer erro.
+- Exceções de domínio próprias em `usecases/exceptions` (`AgendamentoNaoEncontradoException`, `RegraDeNegocioException`, `OperacaoNaoPermitidaException`), mapeadas pelo `GlobalExceptionHandler` (em `frameworks/exceptions`, junto com o `ApiResponse` de `adapters/in/controller`) para 404, 400 e 409 respectivamente. Um handler genérico de `Exception` cobre falhas inesperadas com 500, mantendo o envelope de resposta consistente em qualquer erro.
+- Casos de uso separados por responsabilidade: `CriarAgendamentoUseCaseImpl`, `BuscarAgendamentoUseCaseImpl` e `AtualizarStatusAgendamentoUseCaseImpl` — uma implementação por porta de entrada, em vez de uma classe única implementando as 3 interfaces.
 - Persistência via JPA com H2 para facilitar execução local e testes.
 - Respostas de API padronizadas com envelope contendo data, message e timestamp.
 - Publicação de evento Kafka (`agendamento-criado`) desacoplada via port de saída `AgendamentoEventPublisherPort`; o adapter `KafkaAgendamentoEventPublisher` é a única peça que conhece Kafka.

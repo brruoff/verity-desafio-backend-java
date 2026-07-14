@@ -1,4 +1,4 @@
-package com.desafio.agendamento.frameworks.exceptions;
+package com.desafio.agendamento.usecases.exceptions;
 
 public class OperacaoNaoPermitidaException extends RuntimeException {
     public OperacaoNaoPermitidaException(String message) {

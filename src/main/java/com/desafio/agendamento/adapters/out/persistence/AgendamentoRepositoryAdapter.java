@@ -3,7 +3,7 @@ package com.desafio.agendamento.adapters.out.persistence;
 import com.desafio.agendamento.entities.Agendamento;
 import com.desafio.agendamento.entities.PaginaResultado;
 import com.desafio.agendamento.entities.StatusAgendamento;
-import com.desafio.agendamento.frameworks.exceptions.OperacaoNaoPermitidaException;
+import com.desafio.agendamento.usecases.exceptions.OperacaoNaoPermitidaException;
 import com.desafio.agendamento.usecases.ports.out.AgendamentoRepositoryPort;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;

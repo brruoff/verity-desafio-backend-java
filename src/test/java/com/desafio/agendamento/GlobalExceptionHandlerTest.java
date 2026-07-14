@@ -1,6 +1,6 @@
 package com.desafio.agendamento;
 
-import com.desafio.agendamento.frameworks.exceptions.ApiResponse;
+import com.desafio.agendamento.adapters.in.controller.ApiResponse;
 import com.desafio.agendamento.frameworks.exceptions.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
